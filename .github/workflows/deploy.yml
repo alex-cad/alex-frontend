@@ -1,0 +1,52 @@
+name: Deploy NextJs
+
+on:
+    pull_request:
+        branches:
+            - dev
+
+env:
+  HOST: 120.24.161.118
+  USERNAME: ecs-user
+  IMAGE_NAME: nextjs-dev-frontend
+  CONTAINER_NAME: dev-frontend
+
+jobs:
+    # Build docker image and deploy to remote server
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Docker build
+          run: docker build -f ./Dockerfile -t ${{ env.IMAGE_NAME }} .
+
+        - name: Docker save
+          run: docker save -o ${{ env.IMAGE_NAME }}.tar ${{ env.IMAGE_NAME }}:latest
+        
+        - name: Transfer to remote server
+          run: |
+            mkdir -p ~/.ssh
+            echo "${{ secrets.ALIYUN_ECS_SSH_SECRET }}" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+            scp -o StrictHostKeyChecking=no ./${{ env.IMAGE_NAME }}.tar ${{ env.USERNAME }}@${{ env.HOST }}:~/${{ env.IMAGE_NAME }}.tar
+
+        - name: Restart nextjs service
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ env.HOST }}
+            username: ${{ env.USERNAME }}
+            key: ${{ secrets.ALIYUN_ECS_SSH_SECRET }}
+            port: 22
+            script: |
+              docker load -i ~/${{ env.IMAGE_NAME }}.tar
+              docker stop ${{ env.CONTAINER_NAME }}
+              docker rm ${{ env.CONTAINER_NAME }}
+              docker run -d --name ${{ env.CONTAINER_NAME }} -p 3000:3000 ${{ env.IMAGE_NAME }}:latest
+
+          
+
+        
+
+        
