@@ -44,6 +44,7 @@ jobs:
               docker stop ${{ env.CONTAINER_NAME }}
               docker rm ${{ env.CONTAINER_NAME }}
               docker run -d --name ${{ env.CONTAINER_NAME }} -p 3000:3000 ${{ env.IMAGE_NAME }}:latest
+              docker image prune -f
 
           
 
