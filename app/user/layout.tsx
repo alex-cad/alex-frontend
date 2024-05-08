@@ -2,7 +2,7 @@
 
 import { redirect, usePathname, useRouter } from 'next/navigation';
 import MyHeader from "@/app/ui/header";
-
+import config from "@/app/config";
 function SettingIcon() {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -146,7 +146,60 @@ export default function RootLayout({
                         </a>
                     </div>
                 </div>
-                <div>{children}</div>
+                <div className="flex-1" >
+                    <div className="px-24 pt-4">
+                        {/* <div className='pb-4'>
+                            <div className="flex text-sm items-center text-gray-500">
+                                <div>
+                                    <a href="#" className="block transition hover:text-gray-400">
+                                        <span className="sr-only"> Home </span>
+
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-4 w-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth="2"
+                                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                                            />
+                                        </svg>
+                                    </a>
+                                </div>
+                                {
+
+                                    pathname.split("/").slice(2).map((v, index) => (
+                                        <>
+                                            <div>
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    className="h-4 w-4"
+                                                    viewBox="0 0 20 20"
+                                                    fill="currentColor"
+                                                >
+                                                    <path
+                                                        fillRule="evenodd"
+                                                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                        clipRule="evenodd"
+                                                    />
+                                                </svg>
+                                            </div>
+
+                                            <div>
+                                                <a href="#" className="block transition hover:text-gray-400"> {config.router_map[v]} </a>
+                                            </div>
+                                        </>
+                                    ))
+                                }
+                            </div>
+                        </div> */}
+                        {children}
+                    </div>
+                </div>
             </div>
         </div>
     );
