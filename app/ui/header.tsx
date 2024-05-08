@@ -56,15 +56,15 @@ export default function MyHeader({ className = "" }) {
                 <div className="flex flex-1 items-center justify-end md:justify-between">
                     <nav aria-label="Global" className="hidden md:block">
                         <ul className="flex items-center gap-6 text-sm">
-                            <li>
+                            {/* <li>
                                 <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> About </a>
-                            </li>
+                            </li> */}
 
                             <li>
-                                <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> Careers </a>
+                                <a className="text-gray-500 transition hover:text-gray-500/75" href="/designs"> Designs </a>
                             </li>
 
-                            <li>
+                            {/* <li>
                                 <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> History </a>
                             </li>
 
@@ -78,7 +78,7 @@ export default function MyHeader({ className = "" }) {
 
                             <li>
                                 <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> Blog </a>
-                            </li>
+                            </li> */}
                         </ul>
                     </nav>
 

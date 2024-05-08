@@ -37,9 +37,8 @@ let products = [
 
 export default function CartPage() {
   return (
-
     <>
-      <MyHeader className=" sticky top-0 border-b border-slate-200" />
+      <MyHeader className="sticky top-0 border-b border-slate-200" />
       <section>
         <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
           <div className="mx-auto max-w-3xl">
