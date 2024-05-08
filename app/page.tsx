@@ -1,7 +1,9 @@
 import config from "@/app/config";
+import MyHeader from "@/app/ui/header";
 export default function Home() {
   return (
     <>
+      <MyHeader className="border-b border-slate-200"/>
       <main className="mx-auto max-w-screen-xl space-y-8 px-4 py-16 sm:px-6 lg:space-y-16 lg:px-8">
         Welcome to Next.js!
       </main>

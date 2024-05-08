@@ -29,13 +29,21 @@ function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ')
 }
 
-export default function MyHeader() {
+function CartIcon() {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+        </svg>
+    )
+}
+
+export default function MyHeader({ className = "" }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
     return (
-        <header className="bg-white">
+        <header className={`bg-white ` + className}>
             <div className="mx-auto flex h-16 max-w-screen-xl items-center gap-8 px-4 sm:px-6 lg:px-8">
-                <a className="block text-teal-600" href="#">
+                <a className="block text-teal-600" href="/">
                     <span className="sr-only">Home</span>
                     <svg className="h-8" viewBox="0 0 28 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
@@ -77,15 +85,22 @@ export default function MyHeader() {
                     <div className="flex items-center gap-4">
                         <div className="sm:flex sm:gap-4">
                             <a
+                                className=" flex flex-col items-center text-slate-500 hover:text-slate-700 transition justify-center"
+                                href="/cart"
+                            >
+                                <CartIcon />
+                            </a>
+
+                            <a
                                 className="block rounded-md bg-teal-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-teal-700"
-                                href="#"
+                                href="/signup"
                             >
                                 Sign Up
                             </a>
 
                             <a
                                 className="hidden rounded-md bg-gray-100 px-5 py-2.5 text-sm font-medium text-teal-600 transition hover:text-teal-600/75 sm:block"
-                                href="#"
+                                href="/signin"
                             >
                                 Sign In
                             </a>

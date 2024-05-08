@@ -1,5 +1,8 @@
+"use client"
+
 import React from 'react';
 import image from 'next/image';
+import MyHeader from "@/app/ui/header";
 
 let products = [
   {
@@ -34,42 +37,43 @@ let products = [
 
 export default function CartPage() {
   return (
-    <section>
-      <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        <div className="mx-auto max-w-3xl">
-          <header className="text-center py-8">
-            <h1 className="text-xl font-bold text-gray-900 sm:text-3xl">购物车</h1>
-          </header>
 
-          {/* divider */}
-          <span className="flex items-center">
-            <span className="h-px flex-1 bg-gray-400"></span>
-          </span>
+    <>
+      <MyHeader className=" sticky top-0 border-b border-slate-200" />
+      <section>
+        <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+          <div className="mx-auto max-w-3xl">
+            <header className="text-center py-8">
+              <h1 className="text-xl font-bold text-gray-900 sm:text-3xl">购物车</h1>
+            </header>
 
-          <div className="mt-8">
-            <ul className="space-y-4">
-              {products.map((product, index) => (
-                <React.Fragment key={product.id}>
-                  <li key={product.id} className="flex items-center gap-4">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="size-40 rounded object-cover"
-                    />
+            <span className="flex items-center">
+              <span className="h-px flex-1 bg-slate-200"></span>
+            </span>
 
-                    <div>
-                      <h3 className=" text-gray-900">{product.name}</h3>
+            <div className="mt-8">
+              <ul className="space-y-4">
+                {products.map((product, index) => (
+                  <React.Fragment key={product.id}>
+                    <li key={product.id} className="flex items-center gap-4">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="size-40 rounded object-cover"
+                      />
 
-                      <dl className="mt-0.5 space-y-px text-[10px] text-gray-600">
-                        <div>
-                          <dt className="inline">尺寸：</dt>
-                          <dd className="inline">{product.size}</dd>
-                        </div>
-                      </dl>
-                    </div>
+                      <div>
+                        <h3 className=" text-gray-900">{product.name}</h3>
 
-                    <div className="flex flex-1 items-center justify-end gap-2">
-                      
+                        <dl className="mt-0.5 space-y-px text-[10px] text-gray-600">
+                          <div>
+                            <dt className="inline">尺寸：</dt>
+                            <dd className="inline">{product.size}</dd>
+                          </div>
+                        </dl>
+                      </div>
+
+                      <div className="flex flex-1 items-center justify-end gap-2">
                         <div className="text-lg text-gray-900">¥{product.price}</div>
 
                         <div>
@@ -85,6 +89,8 @@ export default function CartPage() {
                               value={product.quantity}
                               id={`Line${product.id}Qty`}
                               className="h-10 w-16 border-transparent text-center [-moz-appearance:_textfield] sm:text-sm [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
+                              onChange={(a)=>{console.log(a)}}
+
                             />
                             <button type="button" className="size-10 leading-10 text-gray-600 transition hover:opacity-75">
                               +
@@ -110,76 +116,77 @@ export default function CartPage() {
                             />
                           </svg>
                         </button>
-                      
+                      </div>
+
+                    </li>
+
+                    {/* 分割线 */}
+                    {index < products.length - 1 && (
+                      <hr className="border-t border-gray-300 my-4" />
+                    )}
+                  </React.Fragment>
+                ))}
+
+              </ul>
+
+              <div className="mt-8 flex justify-end border-t border-gray-400 pt-8">
+                <div className="w-screen max-w-lg space-y-4">
+                  <dl className="space-y-1 text-sm text-gray-700">
+                    <div className="flex justify-between">
+                      <dt>原价</dt>
+                      <dd>¥250</dd>
                     </div>
 
-                  </li>
 
-                  {/* 分割线 */}
-                  {index < products.length - 1 && (
-                    <hr className="border-t border-gray-300 my-4" />
-                  )}
-                </React.Fragment>
-              ))}
+                    <div className="flex justify-between">
+                      <dt>为您节省</dt>
+                      <dd>-¥20</dd>
+                    </div>
 
-            </ul>
+                    <div className="flex justify-between !text-lg font-medium">
+                      <dt>总价</dt>
+                      <dd>¥230</dd>
+                    </div>
+                  </dl>
 
-            <div className="mt-8 flex justify-end border-t border-gray-400 pt-8">
-              <div className="w-screen max-w-lg space-y-4">
-                <dl className="space-y-1 text-sm text-gray-700">
-                  <div className="flex justify-between">
-                    <dt>原价</dt>
-                    <dd>¥250</dd>
-                  </div>
-
-
-                  <div className="flex justify-between">
-                    <dt>为您节省</dt>
-                    <dd>-¥20</dd>
-                  </div>
-
-                  <div className="flex justify-between !text-lg font-medium">
-                    <dt>总价</dt>
-                    <dd>¥230</dd>
-                  </div>
-                </dl>
-
-                <div className="flex justify-end">
-                  <span
-                    className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-indigo-700"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth="1.5"
-                      stroke="currentColor"
-                      className="-ms-1 me-1.5 h-4 w-4"
+                  <div className="flex justify-end">
+                    <span
+                      className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-indigo-700"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"
-                      />
-                    </svg>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="1.5"
+                        stroke="currentColor"
+                        className="-ms-1 me-1.5 h-4 w-4"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 010 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 010-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375z"
+                        />
+                      </svg>
 
-                    <p className="whitespace-nowrap text-xs">2 优惠券</p>
-                  </span>
-                </div>
+                      <p className="whitespace-nowrap text-xs">2个优惠券</p>
+                    </span>
+                  </div>
 
-                <div className="flex justify-end">
-                  <a
-                    href="#"
-                    className="block rounded bg-indigo-600  hover:bg-indigo-700 px-10 py-3 text-sm text-gray-100 transition"
-                  >
-                    下单
-                  </a>
+                  <div className="flex justify-end">
+                    <a
+                      href="#"
+                      className="block rounded bg-indigo-600  hover:bg-indigo-700 px-10 py-3 text-sm text-gray-100 transition"
+                    >
+                      下单
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
+
   );
 }
