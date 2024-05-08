@@ -147,7 +147,7 @@ export default function RootLayout({
                     </div>
                 </div>
                 <div className="flex-1" >
-                    <div className="px-24 pt-4">
+                    <div className="mx-auto max-w-screen-lg">
                         {/* <div className='pb-4'>
                             <div className="flex text-sm items-center text-gray-500">
                                 <div>
