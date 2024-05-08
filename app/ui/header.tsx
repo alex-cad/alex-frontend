@@ -29,11 +29,11 @@ function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ')
 }
 
-export default function MyHeader() {
+export default function MyHeader({ className = ""}) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
     return (
-        <header className="bg-white">
+        <header className={`bg-white `+className}>
             <div className="mx-auto flex h-16 max-w-screen-xl items-center gap-8 px-4 sm:px-6 lg:px-8">
                 <a className="block text-teal-600" href="#">
                     <span className="sr-only">Home</span>
