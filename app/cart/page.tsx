@@ -3,6 +3,7 @@
 import React from 'react';
 import image from 'next/image';
 import MyHeader from "@/app/ui/header";
+
 let products = [
   {
     id: 1,
@@ -36,6 +37,7 @@ let products = [
 
 export default function CartPage() {
   return (
+
     <>
       <MyHeader className=" sticky top-0 border-b border-slate-200" />
       <section>
@@ -72,7 +74,6 @@ export default function CartPage() {
                       </div>
 
                       <div className="flex flex-1 items-center justify-end gap-2">
-
                         <div className="text-lg text-gray-900">¥{product.price}</div>
 
                         <div>
@@ -89,6 +90,7 @@ export default function CartPage() {
                               id={`Line${product.id}Qty`}
                               className="h-10 w-16 border-transparent text-center [-moz-appearance:_textfield] sm:text-sm [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
                               onChange={(a)=>{console.log(a)}}
+
                             />
                             <button type="button" className="size-10 leading-10 text-gray-600 transition hover:opacity-75">
                               +
@@ -114,7 +116,6 @@ export default function CartPage() {
                             />
                           </svg>
                         </button>
-
                       </div>
 
                     </li>
