@@ -109,7 +109,7 @@ export default function RootLayout({
                                             <a
                                                 href={btn.ref}
                                                 className={
-                                                    pathname === btn.ref
+                                                    pathname.startsWith(btn.ref)
                                                         ? "group relative flex justify-center rounded px-2 py-2 my-2 text-blue-700 bg-blue-50"
                                                         : "group relative flex justify-center rounded px-2 py-2 my-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
                                                 }

@@ -1,13 +1,13 @@
 "use client"
 
 import React from 'react';
-import image from 'next/image';
+import Image from 'next/image';
 import MyHeader from "@/app/ui/header";
 
 let products = [
   {
     id: 1,
-    image: 'productAssets/table.png',
+    image: '/productAssets/table.png',
     name: '桌子',
     size: '1m*1m*1m',
     color: 'White',
@@ -16,7 +16,7 @@ let products = [
   },
   {
     id: 2,
-    image: 'productAssets/chair.png',
+    image: '/productAssets/chair.png',
     name: '椅子',
     size: '1m*1m*1m',
     price: 200,
@@ -25,7 +25,7 @@ let products = [
   },
   {
     id: 3,
-    image: 'productAssets/sofa.png',
+    image: '/productAssets/sofa.png',
     name: '沙发',
     size: '1m*1m*1m',
     price: 300,
@@ -55,9 +55,11 @@ export default function CartPage() {
                 {products.map((product, index) => (
                   <React.Fragment key={product.id}>
                     <li key={product.id} className="flex items-center gap-4">
-                      <img
+                      <Image
                         src={product.image}
                         alt={product.name}
+                        width={80}
+                        height={80}
                         className="size-40 rounded object-cover"
                       />
 
