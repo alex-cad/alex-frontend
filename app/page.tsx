@@ -237,9 +237,9 @@ export default function Home() {
             </div>
           </div>
 
-          <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()}. {config.company_name}. All rights reserved.
+          <div className="text-xs text-gray-500">&copy; {new Date().getFullYear()}. {config.company_name}. All rights reserved.
             <div><a className="hover:underline" href="#">ICP</a></div>
-          </p>
+          </div>
         </div>
       </footer>
     </>
