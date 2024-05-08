@@ -34,7 +34,7 @@ export default function UserOrdersPage() {
         <div className='divide-y divide-slate-200'>
             {
                 products.map((product, index) => (
-                    <div className="mx-6 py-8 border-slate-200 text-slate-700">
+                    <div key={product.name} className="mx-6 py-8 border-slate-200 text-slate-700">
                         <Image
                             src={product.image}
                             alt={product.name}

@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import MyHeader from "@/app/ui/header";
-
+import Link from "next/link";
 let products = [
   {
     id: 1,
@@ -174,12 +174,12 @@ export default function CartPage() {
                   </div>
 
                   <div className="flex justify-end">
-                    <a
+                    <Link
                       href="#"
                       className="block rounded bg-indigo-600  hover:bg-indigo-700 px-10 py-3 text-sm text-gray-100 transition"
                     >
                       下单
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>

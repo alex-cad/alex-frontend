@@ -3,6 +3,7 @@
 import { redirect, usePathname, useRouter } from 'next/navigation';
 import MyHeader from "@/app/ui/header";
 import config from "@/app/config";
+import Link from 'next/link';
 function SettingIcon() {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -86,7 +87,7 @@ export default function RootLayout({
                         <div className="border-t border-gray-100">
                             <div className="px-2">
                                 <div className="py-4">
-                                    <a
+                                    <Link
                                         href="/user"
                                         className={
                                             pathname === "/user"
@@ -100,13 +101,13 @@ export default function RootLayout({
                                         >
                                             主页
                                         </div>
-                                    </a>
+                                    </Link>
                                 </div>
 
                                 <ul className="space-y-1 border-t border-gray-100 pt-4">
                                     {sidebtns.map((btn) => (
                                         <li key={btn.name}>
-                                            <a
+                                            <Link
                                                 href={btn.ref}
                                                 className={
                                                     pathname.startsWith(btn.ref)
@@ -120,7 +121,7 @@ export default function RootLayout({
                                                 >
                                                     {btn.name}
                                                 </div>
-                                            </a>
+                                            </Link>
                                         </li>
                                     ))}
                                 </ul>
@@ -128,7 +129,7 @@ export default function RootLayout({
                         </div>
                     </div>
                     <div className="border-t border-gray-100 bg-white p-2">
-                        <a
+                        <Link
                             href="/user/preference"
                             className={
                                 pathname === "/user/preference"
@@ -143,7 +144,7 @@ export default function RootLayout({
                             >
                                 设置
                             </div>
-                        </a>
+                        </Link>
                     </div>
                 </div>
                 <div className="flex-1" >
@@ -151,7 +152,7 @@ export default function RootLayout({
                         {/* <div className='pb-4'>
                             <div className="flex text-sm items-center text-gray-500">
                                 <div>
-                                    <a href="#" className="block transition hover:text-gray-400">
+                                    <Link href="#" className="block transition hover:text-gray-400">
                                         <span className="sr-only"> Home </span>
 
                                         <svg
@@ -168,7 +169,7 @@ export default function RootLayout({
                                                 d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
                                             />
                                         </svg>
-                                    </a>
+                                    </Link>
                                 </div>
                                 {
 
@@ -190,7 +191,7 @@ export default function RootLayout({
                                             </div>
 
                                             <div>
-                                                <a href="#" className="block transition hover:text-gray-400"> {config.router_map[v]} </a>
+                                                <Link href="#" className="block transition hover:text-gray-400"> {config.router_map[v]} </Link>
                                             </div>
                                         </>
                                     ))

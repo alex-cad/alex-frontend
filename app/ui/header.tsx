@@ -12,6 +12,7 @@ import {
     XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { ChevronDownIcon, PhoneIcon, PlayCircleIcon, ArrowRightIcon } from '@heroicons/react/20/solid'
+import Link from 'next/link'
 
 const products = [
     { name: 'Analytics', description: 'Get a better understanding of your traffic', href: '#', icon: ChartPieIcon },
@@ -43,7 +44,7 @@ export default function MyHeader({ className = "" }) {
     return (
         <header className={`bg-white ` + className}>
             <div className="mx-auto flex h-16 max-w-screen-xl items-center gap-8 px-4 sm:px-6 lg:px-8">
-                <a className="block text-teal-600" href="/">
+                <Link className="block text-teal-600" href="/">
                     <span className="sr-only">Home</span>
                     <svg className="h-8" viewBox="0 0 28 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
@@ -51,7 +52,7 @@ export default function MyHeader({ className = "" }) {
                             fill="currentColor"
                         />
                     </svg>
-                </a>
+                </Link>
 
                 <div className="flex flex-1 items-center justify-end md:justify-between">
                     <nav aria-label="Global" className="hidden md:block">
@@ -69,11 +70,11 @@ export default function MyHeader({ className = "" }) {
                             </li>
 
                             <li>
-                                <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> Services </a>
+                                <Link className="text-gray-500 transition hover:text-gray-500/75" href="#"> Services </Link>
                             </li>
 
                             <li>
-                                <a className="text-gray-500 transition hover:text-gray-500/75" href="#"> Projects </a>
+                                <Link className="text-gray-500 transition hover:text-gray-500/75" href="#"> Projects </Link>
                             </li>
 
                             <li>
@@ -84,26 +85,26 @@ export default function MyHeader({ className = "" }) {
 
                     <div className="flex items-center gap-4">
                         <div className="sm:flex sm:gap-4">
-                            <a
+                            <Link
                                 className=" flex flex-col items-center text-slate-500 hover:text-slate-700 transition justify-center"
                                 href="/cart"
                             >
                                 <CartIcon />
-                            </a>
+                            </Link>
 
-                            <a
+                            <Link
                                 className="block rounded-md bg-teal-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-teal-700"
                                 href="/signup"
                             >
                                 Sign Up
-                            </a>
+                            </Link>
 
-                            <a
+                            <Link
                                 className="hidden rounded-md bg-gray-100 px-5 py-2.5 text-sm font-medium text-teal-600 transition hover:text-teal-600/75 sm:block"
                                 href="/signin"
                             >
                                 Sign In
-                            </a>
+                            </Link>
                         </div>
 
                         <button
