@@ -61,7 +61,7 @@ export default function MyHeader({ className = "" }) {
                             </li> */}
 
                             <li>
-                                <a className="text-gray-500 transition hover:text-gray-500/75" href="/designs"> Designs </a>
+                                <a className="text-gray-500 transition hover:text-gray-500/75" href="/designs"> 设计库 </a>
                             </li>
 
                             {/* <li>
