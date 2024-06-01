@@ -5,34 +5,42 @@ import Link from "next/link";
 
 let products = [
     {
-        id: 1,
-        image: '/productAssets/table.png',
-        name: '桌子',
-        size: '1m*1m*1m',
-        color: 'White',
-        price: 100,
-        quantity: 1
+      id: 1,
+      image: '/productAssets/table.png',
+      name: '桌子',
+      size: '1m*1m*1m',
+      color: 'White',
+      price: 100,
+      quantity: 1
     },
     {
-        id: 2,
-        image: '/productAssets/chair.png',
-        name: '椅子',
-        size: '1m*1m*1m',
-        price: 200,
-        color: 'White',
-        quantity: 2
+      id: 2,
+      image: '/productAssets/chair.png',
+      name: '椅子',
+      size: '1m*1m*1m',
+      price: 200,
+      color: 'White',
+      quantity: 2
     },
     {
-        id: 3,
-        image: '/productAssets/sofa.png',
-        name: '沙发',
-        size: '1m*1m*1m',
-        price: 300,
-        color: 'White',
-        quantity: 3
+      id: 3,
+      image: '/productAssets/sofa.png',
+      name: '沙发',
+      size: '1m*1m*1m',
+      price: 300,
+      color: 'White',
+      quantity: 3
     },
-];
-
+    {
+      id: 4,
+      image: '/productAssets/table2.jpg',
+      name: '自定义办公桌（1m*2m)',
+      size: '1m*1m*1m',
+      color: 'White',
+      price: 1200,
+      quantity: 1
+    },
+  ];
 
 export default function Page() {
     return (<>

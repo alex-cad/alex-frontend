@@ -9,7 +9,7 @@ export default function Page() {
                     <CheckCircleIcon className="size-20 text-success" />
                     <div className="m-4 space-y-4">
                         <div className=" card-title">您的订单已提交成功，请尽快付款</div>
-                        <div className=" text-lg">金额：¥100.00元</div>
+                        <div className=" text-lg">金额：¥1200.00元</div>
                     </div>
 
                 </div>

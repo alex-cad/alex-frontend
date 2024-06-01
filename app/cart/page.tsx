@@ -34,6 +34,15 @@ let products = [
     color: 'White',
     quantity: 3
   },
+  {
+    id: 4,
+    image: '/productAssets/table2.jpg',
+    name: '自定义办公桌（1m*2m)',
+    size: '1m*1m*1m',
+    color: 'White',
+    price: 1200,
+    quantity: 1
+  },
 ];
 
 export default function CartPage() {
