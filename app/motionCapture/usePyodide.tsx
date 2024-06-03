@@ -17,6 +17,7 @@ export const usePyodide = () => {
   useEffect(() => {
     const loadPyodide = async () => {
       try {
+        addStatus('Please wait...');
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/pyodide/dev/full/pyodide.js';
         script.onload = async () => {
@@ -24,23 +25,26 @@ export const usePyodide = () => {
             // @ts-ignore
             const pyodideInstance = await window.loadPyodide();
             setPyodide(pyodideInstance);
-            setLoading('Loading micropip');
             addStatus('Loading micropip');
+            setLoading('Loading micropip');
+            
             await pyodideInstance.loadPackage('micropip');
             const micropip = pyodideInstance.pyimport('micropip');
-            setLoading('Installing opencv-contrib-python');
             addStatus('Installing opencv-contrib-python');
+            setLoading('Installing opencv-contrib-python');
             await micropip.install('./whl/opencv_contrib_python-4.9.0.80-cp312-cp312-pyodide_2024_0_wasm32.whl'); 
             setLoading('Loaded opencv-contrib-python');
             addStatus('Loaded opencv-contrib-python');
 
-            // Check opencv version
             const code = `
 import cv2
 print(cv2.__version__)
+cv2.__version__
             `;
             const opencvVersion = await pyodideInstance.runPythonAsync(code);
             addStatus(`OpenCV version: ${opencvVersion}`);
+            setLoading('Ready')
+            addStatus('Ready to go!');
           } catch (error) {
             setLoading(`Error loading pyodide: ${(error as Error).message}`);
             addStatus(`Error loading pyodide: ${(error as Error).message}`);
