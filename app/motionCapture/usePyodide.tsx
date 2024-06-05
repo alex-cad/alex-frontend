@@ -19,7 +19,7 @@ export const usePyodide = () => {
       try {
         addStatus('Please wait...');
         const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/pyodide/dev/full/pyodide.js';
+        script.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js';
         script.onload = async () => {
           try {
             // @ts-ignore
@@ -32,6 +32,7 @@ export const usePyodide = () => {
             const micropip = pyodideInstance.pyimport('micropip');
             addStatus('Installing opencv-contrib-python');
             setLoading('Installing opencv-contrib-python');
+            await micropip.install('numpy')
             await micropip.install('./whl/opencv_contrib_python-4.9.0.80-cp312-cp312-pyodide_2024_0_wasm32.whl'); 
             setLoading('Loaded opencv-contrib-python');
             addStatus('Loaded opencv-contrib-python');
@@ -59,5 +60,5 @@ cv2.__version__
     loadPyodide();
   }, []);
 
-  return { pyodide, loading, status };
+  return { pyodide, loading, status, addStatus};
 };

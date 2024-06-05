@@ -1,43 +1,29 @@
 "use client";
 
-import React from 'react'
-import { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import Webcam from "react-webcam";
 import { usePyodide } from "./usePyodide";
 
 const PyodidePage = () => {
-  const { pyodide, loading, status } = usePyodide();
+  const { pyodide, loading, status, addStatus } = usePyodide();
   const [output, setOutput] = useState<string | null>(null);
-  // const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
   const [selectedCameras, setSelectedCameras] = useState<string[]>([]);
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
-  const [processedImage, setProcessedImage] = useState<string | null>(null);
-  const webcamRef = useRef<Webcam>(null);
+  const [processedImages, setProcessedImages] = useState<{ [deviceId: string]: string | null }>({});
+  const webcamRefs = useRef<{ [deviceId: string]: Webcam | null }>({});
+  
+  const [frameRates, setFrameRates] = useState<{ [deviceId: string]: number }>({});
+  const [updateTimestamps, setUpdateTimestamps] = useState<{ [deviceId: string]: number[] }>({});
+  const [frameCount, setFrameCount] = useState<{ [deviceId: string]: number }>({});
+  const [totalTime, setTotalTime] = useState<{ [deviceId: string]: number }>({});
+  
 
-  //   const handleCameraSelect = async (deviceId: string) => { setSelectedCamera(deviceId);
-  //   if (navigator.mediaDevices.getUserMedia) {
-  //     try {
-  //       const stream = await navigator.mediaDevices.getUserMedia({
-  //         video: { deviceId: { exact: deviceId } },
-  //       });
-  //       if (webcamRef.current && webcamRef.current.video) {
-  //         webcamRef.current.video.srcObject = stream;
-  //         webcamRef.current.video.play();
-  //       }
-  //     } catch (error) {
-  //       console.error(`Error accessing user media: ${error}`);
-  //     }
-  //   }
-  // };
-
-  const handleCameraSelect = async (deviceId: string) => {
+  // 如果包含deviceid, 则点击会取消，否则会添加这个相机
+  const handleCameraSelect = (deviceId: string) => {
     setSelectedCameras(prevSelectedCameras => {
-      // 如果相机已经被选中，那么取消选中
       if (prevSelectedCameras.includes(deviceId)) {
         return prevSelectedCameras.filter(id => id !== deviceId);
-      }
-      // 否则，选中相机
-      else {
+      } else {
         return [...prevSelectedCameras, deviceId];
       }
     });
@@ -50,26 +36,30 @@ const PyodidePage = () => {
           const stream = await navigator.mediaDevices.getUserMedia({
             video: { deviceId: { exact: deviceId } },
           });
-          if (webcamRef.current && webcamRef.current.video) {
-            webcamRef.current.video.srcObject = stream;
-            webcamRef.current.video.play();
+          const videoElement = webcamRefs.current[deviceId]?.video;
+          if (videoElement && !videoElement.srcObject) {
+            videoElement.srcObject = stream;
+            videoElement.play();
           }
         } catch (error) {
           console.error(`Error accessing user media: ${error}`);
+          addStatus(`Error accessing user media: ${(error as Error).message}`);
         }
       }
     };
-
     selectedCameras.forEach(startCamera);
   }, [selectedCameras]);
 
-
-  const capture = useCallback(() => {
-    const imageSrc = webcamRef.current?.getScreenshot();
+  const capture = useCallback((deviceId: string) => {
+    const imageSrc = webcamRefs.current[deviceId]?.getScreenshot();
     return imageSrc;
-  }, [webcamRef]);
+  }, []);
 
-  const processImageWithPython = async (imageSrc: string) => {
+  
+  
+
+
+  const processImageWithPython = async (imageSrc: string, deviceId: string) => {
     if (pyodide) {
       try {
         const imageArrayBuffer = await fetch(imageSrc).then((res) =>
@@ -77,7 +67,6 @@ const PyodidePage = () => {
         );
         const imageBytes = new Uint8Array(imageArrayBuffer);
 
-        // Convert image bytes to base64
         let imageString = "";
         for (let i = 0; i < imageBytes.length; i++) {
           imageString += String.fromCharCode(imageBytes[i]);
@@ -94,7 +83,6 @@ image_data = base64.b64decode("${imageBase64}")
 image_array = np.frombuffer(image_data, dtype=np.uint8)
 image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
 
-# Process the image with OpenCV (example: convert to grayscale)
 gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 cx = 655.3664
@@ -115,7 +103,6 @@ arucoParams = aruco.DetectorParameters()
 
 corners, ids, rejected = cv2.aruco.detectMarkers(gray_image, arucoDict, parameters=arucoParams)
 
-
 if ids is not None:
   for index in range(0, len(ids)):
       # print(f"ID length: {len(ids)}")
@@ -129,11 +116,33 @@ _, buffer = cv2.imencode('.jpg', gray_image)
 encoded_image = base64.b64encode(buffer).decode('utf-8')
 encoded_image
         `;
-
         const processedImageBase64 = await pyodide.runPythonAsync(code);
-        setProcessedImage(`data:image/jpeg;base64,${processedImageBase64}`);
+
+        setProcessedImages(prevImages => ({
+          ...prevImages,
+          [deviceId]: `data:image/jpeg;base64,${processedImageBase64}`
+        }));
+
+        const now = Date.now();
+
+        setUpdateTimestamps(prevTimestamps => {
+          const newTimestamps = { ...prevTimestamps };
+          if (!newTimestamps[deviceId]) {
+            newTimestamps[deviceId] = [];
+          }
+          newTimestamps[deviceId].push(now);
+
+          // Keep only the timestamps from the last second
+          newTimestamps[deviceId] = newTimestamps[deviceId].filter(timestamp => now - timestamp <= 1000);
+
+          return newTimestamps;
+        });
+
       } catch (error) {
-        setProcessedImage(`Error processing image: ${(error as Error).message}`);
+        setProcessedImages(prevImages => ({
+          ...prevImages,
+          [deviceId]: `Error processing image: ${(error as Error).message}`
+        }));
       }
     }
   };
@@ -173,32 +182,67 @@ print('hello')
   }, [pyodide, loading]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const imageSrc = capture();
-      if (imageSrc) {
-        processImageWithPython(imageSrc);
-      }
+    const interval = setInterval(async () => {
+      const imageSrcPromises = selectedCameras.map(async (deviceId) => {
+        const imageSrc = capture(deviceId);
+        if (imageSrc) {
+          await processImageWithPython(imageSrc, deviceId);
+        }
+      });
+      await Promise.all(imageSrcPromises);
     }, 33);
 
     return () => clearInterval(interval);
-  }, [capture, processImageWithPython]);
+  }, [capture, processImageWithPython, selectedCameras]);
+
+  // useEffect(() => {
+  //   const interval = setInterval(async () => {
+  //     const imageSrcPromises = selectedCameras.map(async (deviceId) => {
+  //       const startTime = performance.now();
+  
+  //       const imageSrc = capture(deviceId);
+  //       if (imageSrc) {
+  //         await processImageWithPython(imageSrc, deviceId);
+  //       }
+  
+  //       const endTime = performance.now();
+  //       const duration = endTime - startTime;
+  
+  //       setFrameCount(prevCounts => {
+  //         const newCounts = { ...prevCounts };
+  //         newCounts[deviceId] = (newCounts[deviceId] || 0) + 1;
+  //         return newCounts;
+  //       });
+  
+  //       setTotalTime(prevTimes => {
+  //         const newTimes = { ...prevTimes };
+  //         newTimes[deviceId] = (newTimes[deviceId] || 0) + duration;
+  //         return newTimes;
+  //       });
+  //     });
+  
+  //     await Promise.all(imageSrcPromises);
+  //   }, 33);
+  
+  //   return () => clearInterval(interval);
+  // }, [capture, processImageWithPython, selectedCameras]);
+  
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Robotic Data Monitor</h1>
       <div className="grid grid-cols-3 gap-4">
-        {/* Statud panel */}
+        {/* Status panel */}
         <div className="col-span-1">
           <h2 className="text-lg font-semibold mb-2">Status: &nbsp;
-            {loading != 'Ready' ? (
+            {loading !== 'Ready' ? (
               <span className="loading loading-spinner loading-xs"></span>
             ) : (
               <span className="text-green-500">Ready</span>
             )}
-
           </h2>
           <div className="bg-gray-100 p-4 rounded-md shadow h-48 overflow-auto">
-            <ul className="list-disc list-inside">
+            <ul className="list-disc list-inside text-xs">
               {status.map((statusMessage, index) => (
                 <li key={index}>{statusMessage}</li>
               ))}
@@ -224,24 +268,47 @@ print('hello')
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4 mt-4">
-        <div className="bg-gray-100 p-4 rounded-md shadow">
+        <div className="col-span-1">
           <h2 className="text-lg font-semibold mb-2">Camera View</h2>
-          {selectedCameras.length > 0 ? (
-            selectedCameras.map((cameraId) => (
-              <Webcam
-                key={cameraId}
-                audio={false}
-                ref={webcamRef}
-                screenshotFormat="image/jpeg"
-                videoConstraints={{ deviceId: cameraId }}
-                className="w-full"
-              />
-            ))
-          ) : (
-            <p>Camera View will be shown here</p>
-          )}
+          <div className="bg-gray-100 p-4 rounded-md shadow flex flex-wrap">
+            {selectedCameras.length > 0 ? (
+              selectedCameras.map((cameraId) => (
+                <Webcam
+                  key={cameraId}
+                  audio={false}
+                  ref={el => {
+                    if (el) webcamRefs.current[cameraId] = el;
+                  }}
+                  screenshotFormat="image/jpeg"
+                  videoConstraints={{ deviceId: cameraId }}
+                  className="w-64"
+                />
+              ))
+            ) : (
+              <p>Camera View will be shown here</p>
+            )}
+          </div>
         </div>
-        <ProcessedImageView processedImage={processedImage} />
+
+        <div className="con-span-2">
+          <h2 className="text-lg font-semibold mb-2">Processed Camera View</h2>
+          <div className="bg-gray-100 p-4 rounded-md shadow flex flex-wrap">
+            {selectedCameras.length > 0 ? (
+              selectedCameras.map((cameraId) => (
+                <div key={cameraId} className="w-64 mt-4">
+                  <img
+                    src={processedImages[cameraId] || undefined}
+                    alt="Processed camera view"
+                    className="w-full"
+                  />
+                  <p className="text-xs mt-2">Frame Rate: {frameRates[cameraId] ? frameRates[cameraId].toFixed(2) : 'Calculating...'} FPS</p>
+                </div>
+              ))
+            ) : (
+              <p>Processed Camera View will be shown here</p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -249,17 +316,3 @@ print('hello')
 
 export default PyodidePage;
 
-
-
-const ProcessedImageView = ({ processedImage }: { processedImage: string | null }) => {
-  return (
-    <div className="bg-gray-100 p-4 rounded-md shadow">
-      <h2 className="text-lg font-semibold mb-2">Processed Camera View</h2>
-      {processedImage ? (
-        <img src={processedImage} alt="Processed camera view" className="w-full mt-4" />
-      ) : (
-        <p>Processed Camera View will be shown here</p>
-      )}
-    </div>
-  );
-};
