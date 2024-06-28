@@ -41,19 +41,21 @@ async function loadOpencv() {
 
 let opencvReadyPromise = loadOpencv();
 
+var countForRunJS = 0;
+var processTimeArrayJS = [];
 self.onmessage = async function (event) {
     await opencvReadyPromise;
-
+    let startTime = performance.now();
     if (event.data.type === "RUN_JS") {
-        const { buffer, width, height, deviceId } = event.data;
+        const { buffer, processedBuffer, width, height, deviceId } = event.data;
         try {
             // 将 ArrayBuffer 转换为 Uint8ClampedArray
             const clampedArray = new Uint8ClampedArray(buffer);
             // 使用 ImageData 构造函数创建一个新的 ImageData 对象
             const imageData = new ImageData(clampedArray, width, height);
-            console.log('ImageData in detect Aruco 1: ', imageData);
+            // console.log('ImageData in detect Aruco 1: ', imageData);
             const inputImage = cv.matFromImageData(imageData);
-            console.log('inputImage in detect Aruco 2: ', inputImage);
+            // console.log('inputImage in detect Aruco 2: ', inputImage);
 
             let grayImg = new cv.Mat();
             let RgbImage = new cv.Mat();
@@ -108,8 +110,8 @@ self.onmessage = async function (event) {
             );
 
             cv.cvtColor(inputImage, RgbImage, cv.COLOR_RGBA2RGB, 0);
-            console.log("RgbImage:", RgbImage);
-            let startTime = performance.now();
+            // console.log("RgbImage:", RgbImage);
+            // let startTime = performance.now();
             cv.detectMarkers(
                 RgbImage,
                 dictionary,
@@ -117,14 +119,14 @@ self.onmessage = async function (event) {
                 markerIds,
                 parameter
             );
-            let endTime = performance.now();
-            let processingTime = endTime - startTime;
-            console.log("detect time:", processingTime);
-            console.log(markerIds.rows);
+            // let endTime = performance.now();
+            // let processingTime = endTime - startTime;
+            // console.log("detect time:", processingTime);
+            // console.log(markerIds.rows);
             if (markerIds.rows > 0) {
                 cv.drawDetectedMarkers(RgbImage, markerCorners, markerIds);
-                console.log("estimating pose");
-                let startTime = performance.now();
+                // console.log("estimating pose");
+                // let startTime = performance.now();
                 cv.estimatePoseSingleMarkers(
                     markerCorners,
                     0.1,
@@ -133,9 +135,9 @@ self.onmessage = async function (event) {
                     rvecs,
                     tvecs
                 );
-                let endTime = performance.now();
-                let processingTime = endTime - startTime;
-                console.log("Estimate time: ", processingTime);
+                // let endTime = performance.now();
+                // let processingTime = endTime - startTime;
+                // console.log("Estimate time: ", processingTime);
 
                 for (let i = 0; i < markerIds.rows; ++i) {
                     let rvec = cv.matFromArray(3, 1, cv.CV_64F, [
@@ -156,25 +158,27 @@ self.onmessage = async function (event) {
                         tvec,
                         0.1
                     );
-                    console.log('pose: ', [
-                        rvec.doublePtr(0, 0)[0],
-                        rvec.doublePtr(0, 1)[0],
-                        rvec.doublePtr(0, 2)[0]
-                    ], [
-                        tvec.doublePtr(0, 0)[0],
-                        tvec.doublePtr(0, 1)[0],
-                        tvec.doublePtr(0, 2)[0]
-                    ]);
+                    // console.log('pose: ', [
+                    //     rvec.doublePtr(0, 0)[0],
+                    //     rvec.doublePtr(0, 1)[0],
+                    //     rvec.doublePtr(0, 2)[0]
+                    // ], [
+                    //     tvec.doublePtr(0, 0)[0],
+                    //     tvec.doublePtr(0, 1)[0],
+                    //     tvec.doublePtr(0, 2)[0]
+                    // ]);
                     rvec.delete();
                     tvec.delete();
                 }
             }
 
             const processedImage = imageDataFromMat(RgbImage);
+            // console.log("processedImage: ", processedImage);
+            const processedView = new Uint8ClampedArray(processedBuffer);
+            processedView.set(new Uint8ClampedArray(processedImage.data.buffer));
+            // console.log("Processed view first 10 elements: ", processedView.slice(0, 10));
 
-            // 从 RgbImage 中提取 ArrayBuffer
-            const processedBuffer = processedImage.data.buffer.slice(0);
-
+            inputImage.delete();
             RgbImage.delete();
             markerImage.delete();
             dictionary.delete();
@@ -186,16 +190,29 @@ self.onmessage = async function (event) {
             distCoeffs.delete();
 
             self.postMessage(
-                { type: "JS_RESULT", result: processedBuffer, deviceId },
-                [processedBuffer]
+                { type: "JS_RESULT", deviceId }
             );
         } catch (error) {
             self.postMessage({
-                type: "PYTHON_ERROR",
+                type: "JS_ERROR",
                 error: error.message,
                 deviceId,
             });
         }
+    }
+    countForRunJS++;
+    let endTime = performance.now();
+    let processTime = endTime - startTime;
+    processTimeArrayJS.push(processTime);
+    if (countForRunJS %100 === 0) {
+        countForRunJS = 0;
+        let sum = 0;
+        for (let i = 0; i < processTimeArrayJS.length; i++) {
+            sum += processTimeArrayJS[i];
+        }
+        let avg = sum / processTimeArrayJS.length;
+        console.log("Average (runJS): ", avg);
+        processTimeArrayJS = [];
     }
 };
 

@@ -49,8 +49,8 @@ const PyodidePage = () => {
             const video = webcam.video;
             // console.log("video.videoWidth: ", video.videoWidth);
             const imageSrc = webcam.getScreenshot({
-                width: 1920,
-                height: 1080,
+                width: 640,
+                height: 480,
             });
             if (imageSrc) {
                 const binaryString = atob(imageSrc.split(",")[1]);
