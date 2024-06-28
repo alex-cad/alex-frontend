@@ -16,7 +16,7 @@
     "axios": "^1.6.8",
     "jotai": "^2.8.0",
     "next": "14.2.2",
-    "opencv.js": "^1.2.1",
+    "opencv-react": "^0.0.6",
     "react": "^18",
     "react-dom": "^18",
     "react-webcam": "^7.2.0",

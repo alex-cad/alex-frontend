@@ -1,6 +1,8 @@
 importScripts('https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js');
 
 let pyodide;
+var countForRunPython = 0;
+var processTimeArray2 = [];
 
 async function loadPyodideAndPackages() {
     try {
@@ -35,7 +37,7 @@ let pyodideReadyPromise = loadPyodideAndPackages();
 
 self.onmessage = async function (event) {
     await pyodideReadyPromise;
-
+    
     if (event.data.type === 'RUN_PYTHON') {
         const { buffer, deviceId } = event.data;
         try {
@@ -53,8 +55,23 @@ ${detectArucoCode}
 encoded_image = process_image('${base64String}')
 encoded_image
 `;
-
+            let startTime = performance.now();
+            countForRunPython++;
             const processedImageBase64 = await pyodide.runPythonAsync(code);
+            let endTime = performance.now();
+            let processTime = endTime - startTime;
+            processTimeArray2.push(processTime);
+            if (countForRunPython % 10 === 0) {
+                //计算平均值
+                countForRunPython = 0;
+                let sum = 0;
+                for (let i = 0; i < processTimeArray2.length; i++) {
+                  sum += processTimeArray2[i];
+                }
+                let avg = sum / processTimeArray2.length;
+                console.log("Average (runPython): ", avg);
+                processTimeArray2 = [];
+              }
 
             // 将 Base64 字符串转换回 ArrayBuffer
             const processedBinaryString = atob(processedImageBase64);

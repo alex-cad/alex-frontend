@@ -1,4 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
+import { add } from 'three/examples/jsm/nodes/Nodes.js';
+
+
+var countForPostMessage = 0;
+var processTimeArrayForPost: number[] = [];
 
 export const usePyodide = () => {
   const [loading, setLoading] = useState<string>('Loading pyodide');
@@ -30,7 +35,12 @@ export const usePyodide = () => {
       } else if (type === 'PYTHON_RESULT') {
         // 处理接收到的 ArrayBuffer
         document.dispatchEvent(new CustomEvent('python-result', { detail: { result, deviceId } }));
-      } else if (type === 'PYTHON_ERROR') {
+      } if (type === 'TIME') {
+        addStatus(`Time: ${message}`);
+        console.log(`Time: ${message}`);
+      }
+      
+      else if (type === 'PYTHON_ERROR') {
         console.error(`Python error for device ${deviceId}:`, error);
       }
     };
@@ -44,6 +54,7 @@ export const usePyodide = () => {
     return new Promise<ArrayBuffer>((resolve, reject) => {
       const worker = workerRef.current;
       if (worker) {
+
         const handleMessage = (event: MessageEvent) => {
           if (event.data.type === 'PYTHON_RESULT' && event.data.deviceId === deviceId) {
             resolve(event.data.result);
@@ -54,7 +65,23 @@ export const usePyodide = () => {
         };
 
         worker.addEventListener('message', handleMessage);
+        let startTime = performance.now();
         worker.postMessage({ type: 'RUN_PYTHON', buffer, deviceId }, [buffer]);
+        let endTime = performance.now();
+        processTimeArrayForPost.push(endTime - startTime);
+        countForPostMessage++;
+        if (countForPostMessage % 10 === 0) {
+          //计算平均值
+          countForPostMessage = 0;
+          let sum = 0;
+          for (let i = 0; i < processTimeArrayForPost.length; i++) {
+            sum += processTimeArrayForPost[i];
+          }
+          let avg = sum / processTimeArrayForPost.length;
+          console.log("Average processing time for 10 frames (post): ", avg);
+          processTimeArrayForPost = [];
+        }
+        
       } else {
         reject('Worker not initialized');
       }
