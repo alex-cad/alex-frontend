@@ -19,7 +19,7 @@ function waitForOpencv(callbackFn, waitTimeMs = 30000, stepTimeMs = 100) {
 
 async function loadOpencv() {
     try {
-        self.postMessage({ type: "STATUS", message: "Loading OpenCv" });
+        self.postMessage({ type: "STATUS", message: "Loading OpenCV" });
         self.importScripts("/js/opencv.js");
         waitForOpencv(function (success) {
             if (success) {
@@ -43,15 +43,19 @@ let opencvReadyPromise = loadOpencv();
 
 var countForRunJS = 0;
 var processTimeArrayJS = [];
+// let poseData = [{num: 0, markerId:'', rvecs: [], tvecs: []}];
+let poseData = [];
+let num = 0;
+let recordingStartTime = null;
+
 self.onmessage = async function (event) {
     await opencvReadyPromise;
     let startTime = performance.now();
     if (event.data.type === "RUN_JS") {
-        const { buffer, processedBuffer, width, height, deviceId } = event.data;
+        const { buffer, processedBuffer, width, height, deviceId, isRecordData, markerSize } = event.data;
+
         try {
-            // 将 ArrayBuffer 转换为 Uint8ClampedArray
             const clampedArray = new Uint8ClampedArray(buffer);
-            // 使用 ImageData 构造函数创建一个新的 ImageData 对象
             const imageData = new ImageData(clampedArray, width, height);
             // console.log('ImageData in detect Aruco 1: ', imageData);
             const inputImage = cv.matFromImageData(imageData);
@@ -89,93 +93,94 @@ self.onmessage = async function (event) {
             let markerCorners = new cv.MatVector();
             let rvecs = new cv.Mat();
             let tvecs = new cv.Mat();
-            let cameraMatrix = cv.matFromArray(
-                3,
-                3,
-                cv.CV_64F,
-                [
-                    9.6635571716090658e2, 0, 2.0679307818305685e2, 0,
-                    9.6635571716090658e2, 2.9370020600555273e2, 0, 0, 1,
-                ]
-            );
-            let distCoeffs = cv.matFromArray(
-                5,
-                1,
-                cv.CV_64F,
-                [
-                    -1.5007354215536557e-3, 9.8722389825801837e-1,
-                    1.7188452542408809e-2, -2.6805958820424611e-2,
-                    -2.3313928379240205,
-                ]
-            );
+            let cameraMatrix = cv.matFromArray(3, 3, cv.CV_64F, [971.2252, 0, 655.3664, 0, 970.747, 367.5246, 0, 0, 1]);
+            let distCoeffs = cv.matFromArray(5, 1, cv.CV_64F, [0, 0, 0, 0, 0]);
 
             cv.cvtColor(inputImage, RgbImage, cv.COLOR_RGBA2RGB, 0);
+            // cv.cvtColor(inputImage, RgbImage, cv.COLOR_RGB2GRAY, 0);
             // console.log("RgbImage:", RgbImage);
             // let startTime = performance.now();
-            cv.detectMarkers(
-                RgbImage,
-                dictionary,
-                markerCorners,
-                markerIds,
-                parameter
-            );
+            cv.detectMarkers(RgbImage, dictionary, markerCorners, markerIds, parameter);
             // let endTime = performance.now();
             // let processingTime = endTime - startTime;
             // console.log("detect time:", processingTime);
-            // console.log(markerIds.rows);
+
+            // console.log('MARKERIDS length: ', markerIds.ucharPtr(0, 0).length);
+            // console.log('MARKERIDS: ',markerIds.ucharPtr(0, 0)[0]);
+
             if (markerIds.rows > 0) {
                 cv.drawDetectedMarkers(RgbImage, markerCorners, markerIds);
                 // console.log("estimating pose");
                 // let startTime = performance.now();
-                cv.estimatePoseSingleMarkers(
-                    markerCorners,
-                    0.1,
-                    cameraMatrix,
-                    distCoeffs,
-                    rvecs,
-                    tvecs
-                );
-                // let endTime = performance.now();
-                // let processingTime = endTime - startTime;
-                // console.log("Estimate time: ", processingTime);
+                cv.estimatePoseSingleMarkers(markerCorners, markerSize, cameraMatrix, distCoeffs, rvecs, tvecs);
 
-                for (let i = 0; i < markerIds.rows; ++i) {
-                    let rvec = cv.matFromArray(3, 1, cv.CV_64F, [
-                        rvecs.doublePtr(0, i)[0],
-                        rvecs.doublePtr(0, i)[1],
-                        rvecs.doublePtr(0, i)[2],
-                    ]);
-                    let tvec = cv.matFromArray(3, 1, cv.CV_64F, [
-                        tvecs.doublePtr(0, i)[0],
-                        tvecs.doublePtr(0, i)[1],
-                        tvecs.doublePtr(0, i)[2],
-                    ]);
-                    cv.drawAxis(
-                        RgbImage,
-                        cameraMatrix,
-                        distCoeffs,
-                        rvec,
-                        tvec,
-                        0.1
-                    );
-                    // console.log('pose: ', [
-                    //     rvec.doublePtr(0, 0)[0],
-                    //     rvec.doublePtr(0, 1)[0],
-                    //     rvec.doublePtr(0, 2)[0]
-                    // ], [
-                    //     tvec.doublePtr(0, 0)[0],
-                    //     tvec.doublePtr(0, 1)[0],
-                    //     tvec.doublePtr(0, 2)[0]
-                    // ]);
-                    rvec.delete();
-                    tvec.delete();
-                }
+                // console.log('rvecs(0): ', rvecs.doublePtr(0), 'rvecs(1): ', rvecs.doublePtr(1))
+
+                // 保存data
             }
+
+            // let endTime = performance.now();
+            // let processingTime = endTime - startTime;
+            // console.log("Estimate time: ", processingTime);
+
+            for (let i = 0; i < markerIds.rows; ++i) {
+                let rvec = cv.matFromArray(3, 1, cv.CV_64F, [rvecs.doublePtr(0, i)[0], rvecs.doublePtr(0, i)[1], rvecs.doublePtr(0, i)[2]]);
+                let tvec = cv.matFromArray(3, 1, cv.CV_64F, [tvecs.doublePtr(0, i)[0], tvecs.doublePtr(0, i)[1], tvecs.doublePtr(0, i)[2]]);
+                cv.drawAxis(RgbImage, cameraMatrix, distCoeffs, rvec, tvec, 30);
+                // console.log(
+                //     "pose: ",
+                //     [rvec.doublePtr(0, 0)[0], rvec.doublePtr(0, 1)[0], rvec.doublePtr(0, 2)[0]],
+                //     [tvec.doublePtr(0, 0)[0], tvec.doublePtr(0, 1)[0], tvec.doublePtr(0, 2)[0]]
+                // );
+                if (isRecordData) {
+                    if (recordingStartTime === null) {
+                        recordingStartTime = performance.now();
+                    }
+                    let currentTime = performance.now();
+                    let elapsedTime = ((currentTime - recordingStartTime) / 1000).toFixed(3); // 秒数
+                    // console.log("Marker ID [", i, "]: ", markerIds.ucharPtr(i, 0)[0], "rvecs: ", rvecs.doublePtr(i), "tvecs: ", tvecs.doublePtr(i));
+                    // console.log(
+                    //     "pushed: ",
+                    //     "num: ",
+                    //     num,
+                    //     "markerId: ",
+                    //     markerIds.ucharPtr(i, 0)[0],
+                    //     "rvecs: ",
+                    //     [rvec.doublePtr(0, 0)[0], rvec.doublePtr(0, 1)[0], rvec.doublePtr(0, 2)[0]],
+                    //     "tvecs: ",
+                    //     [tvec.doublePtr(0, 0)[0], tvec.doublePtr(0, 1)[0], tvec.doublePtr(0, 2)[0]]
+                    // );
+                    poseData.push({
+                        num: num,
+                        time: elapsedTime,  
+                        markerId: markerIds.ucharPtr(i, 0)[0],
+                        rvecs: [+rvec.doublePtr(0, 0)[0].toFixed(4), +rvec.doublePtr(0, 1)[0].toFixed(4), +rvec.doublePtr(0, 2)[0].toFixed(4)],
+                        tvecs: [+tvec.doublePtr(0, 0)[0].toFixed(4), +tvec.doublePtr(0, 1)[0].toFixed(4), +tvec.doublePtr(0, 2)[0].toFixed(4)],
+                    });
+
+                    // poseData.push({
+                    // poseData.push({ num: num, markerId: markerIds.ucharPtr(i, 0)[0], rvecs: rvecs.doublePtr(i), tvecs: tvecs.doublePtr(i) });
+                    // poseData.push({
+                    //     num,
+                    //     markerId: markerIds.ucharPtr(i, 0)[0],
+                    //     rvecs: Array.from(rvecs.data64F.subarray(i * 3, i * 3 + 3)),
+                    //     tvecs: Array.from(tvecs.data64F.subarray(i * 3, i * 3 + 3)),
+                    // });
+                }
+                rvec.delete();
+                tvec.delete();
+            }
+            if (isRecordData) {
+                num++;
+            }
+            // 保存 rvecs 和 tvecs 数据
 
             const processedImage = imageDataFromMat(RgbImage);
             // console.log("processedImage: ", processedImage);
             const processedView = new Uint8ClampedArray(processedBuffer);
             processedView.set(new Uint8ClampedArray(processedImage.data.buffer));
+            self.postMessage({ type: "JS_RESULT", deviceId, result: { rvecs, tvecs, num, markerId: markerIds.ucharPtr(0, 0)[0] } }); //这个也许不需要？
+
             // console.log("Processed view first 10 elements: ", processedView.slice(0, 10));
 
             inputImage.delete();
@@ -188,10 +193,7 @@ self.onmessage = async function (event) {
             tvecs.delete();
             cameraMatrix.delete();
             distCoeffs.delete();
-
-            self.postMessage(
-                { type: "JS_RESULT", deviceId }
-            );
+            // console.log("poseData: ", poseData);
         } catch (error) {
             self.postMessage({
                 type: "JS_ERROR",
@@ -199,19 +201,21 @@ self.onmessage = async function (event) {
                 deviceId,
             });
         }
+    } else if (event.data.type === "GET_POSE") {
+        self.postMessage({ type: "POSE_DATA", deviceId: event.data.deviceId, result: poseData });
     }
     countForRunJS++;
     let endTime = performance.now();
     let processTime = endTime - startTime;
     processTimeArrayJS.push(processTime);
-    if (countForRunJS %100 === 0) {
+    if (countForRunJS % 10 === 0) {
         countForRunJS = 0;
         let sum = 0;
         for (let i = 0; i < processTimeArrayJS.length; i++) {
             sum += processTimeArrayJS[i];
         }
         let avg = sum / processTimeArrayJS.length;
-        console.log("Average (runJS): ", avg);
+        console.log("Average time for 10 frames (runJS): ", avg);
         processTimeArrayJS = [];
     }
 };
@@ -220,8 +224,7 @@ function imageDataFromMat(mat) {
     // converts the mat type to cv.CV_8U
     const img = new cv.Mat();
     const depth = mat.type() % 8;
-    const scale =
-        depth <= cv.CV_8S ? 1.0 : depth <= cv.CV_32S ? 1.0 / 256.0 : 255.0;
+    const scale = depth <= cv.CV_8S ? 1.0 : depth <= cv.CV_32S ? 1.0 / 256.0 : 255.0;
     const shift = depth === cv.CV_8S || depth === cv.CV_16S ? 128.0 : 0.0;
     mat.convertTo(img, cv.CV_8U, scale, shift);
 
@@ -236,15 +239,9 @@ function imageDataFromMat(mat) {
         case cv.CV_8UC4:
             break;
         default:
-            throw new Error(
-                "Bad number of channels (Source image must have 1, 3 or 4 channels)"
-            );
+            throw new Error("Bad number of channels (Source image must have 1, 3 or 4 channels)");
     }
-    const clampedArray = new ImageData(
-        new Uint8ClampedArray(img.data),
-        img.cols,
-        img.rows
-    );
+    const clampedArray = new ImageData(new Uint8ClampedArray(img.data), img.cols, img.rows);
     img.delete();
     return clampedArray;
 }

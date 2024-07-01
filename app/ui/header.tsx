@@ -6,7 +6,7 @@ import { CreditCardIcon, HomeIcon, HeartIcon, ArrowsRightLeftIcon, CubeIcon, Use
 
 const Links = [
     { name: '设计库', href: '/designs' },
-    { name: 'Robotic', href: '/motionCapture' },
+    { name: 'Robotic', href: '/arucoDetect' },
 ]
 
 const personalLinks = [
