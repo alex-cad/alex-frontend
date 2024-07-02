@@ -27,7 +27,7 @@ const OpenCVPage = () => {
     const [recordedData, setRecordedData] = useState<{ [deviceId: string]: PoseData[] }>({});
 
     const [markerSize, setMarkerSize] = useState(25);
-    const videoWidth = 2000, videoHeight = 2000
+    const videoWidth = 300, videoHeight = 200
     const hasMounted = useRef(false);  // 检测是否第一次加载
     const scrollRef = useRef(null);  // 滚动到底部
 
@@ -49,7 +49,6 @@ const OpenCVPage = () => {
     };
 
     getCameras();
-
     return () => {
         Object.values(workerRefs.current).forEach((worker) => {
             worker.terminate();
@@ -71,7 +70,7 @@ const OpenCVPage = () => {
     }, [isRecording]);
 
     useEffect(() => {
-        // 检查 ref 是否被赋值，并将滚动条移动到元素的底部
+        // 将滚动条移到底部
         if (scrollRef.current) {
           scrollRef.current!.scrollTop = scrollRef.current!.scrollHeight;
         }
@@ -89,13 +88,48 @@ const OpenCVPage = () => {
         });
     };
 
+    // const startVideoStream = async (deviceId: string) => {
+    //     try {
+    //         const stream = await navigator.mediaDevices.getUserMedia({
+    //             video: { deviceId, width: videoWidth, height: videoHeight },
+    //         });
+    //         const videoElement = videoRefs.current[deviceId];
+
+    //         if (videoElement) {
+    //             if (videoElement.srcObject) {
+    //                 stopVideoStream(deviceId);
+    //             }
+    //             videoElement.srcObject = stream;
+    //             videoElement.onloadeddata = () => {
+    //                 if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
+    //                     console.log(`Video stream started for device ${deviceId}: ${videoElement.videoWidth}x${videoElement.videoHeight}`);
+    //                     videoElement
+    //                         .play()
+    //                         .then(() => {
+    //                             // 延迟处理，确保 videoElement 完全准备好
+    //                             setTimeout(() => {
+    //                                 captureFrame(deviceId);
+    //                             }, 100);
+    //                         })
+    //                         .catch((error) => {
+    //                             console.error("Error playing video: ", error);
+    //                         });
+    //                 }
+    //             };
+    //         }
+    //     } catch (error) {
+    //         console.error("Error accessing camera: ", error);
+    //     }
+    // };
+
+
     const startVideoStream = async (deviceId: string) => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { deviceId, width: videoWidth, height: videoHeight },
             });
             const videoElement = videoRefs.current[deviceId];
-
+    
             if (videoElement) {
                 if (videoElement.srcObject) {
                     stopVideoStream(deviceId);
@@ -104,13 +138,9 @@ const OpenCVPage = () => {
                 videoElement.onloadeddata = () => {
                     if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
                         console.log(`Video stream started for device ${deviceId}: ${videoElement.videoWidth}x${videoElement.videoHeight}`);
-                        videoElement
-                            .play()
+                        videoElement.play()
                             .then(() => {
-                                // 延迟处理，确保 videoElement 完全准备好
-                                setTimeout(() => {
-                                    captureFrame(deviceId);
-                                }, 100);
+                                captureFrame(deviceId);
                             })
                             .catch((error) => {
                                 console.error("Error playing video: ", error);
@@ -131,6 +161,13 @@ const OpenCVPage = () => {
             videoElement.srcObject = null;
         }
     };
+
+
+    let frameCount = 0; // 初始化帧计数器
+    const frameRateCalculationInterval = 100; // 每处理100帧计算一次帧率
+    let startTime = performance.now();
+    console.log("Start time: ", startTime);
+
 
     const processImageWithJS = useCallback(
         async (buffer: ArrayBuffer, width: number, height: number, deviceId: string) => {
@@ -164,64 +201,45 @@ const OpenCVPage = () => {
                 await runJS(worker, bufferCopy, processedBuffer, width, height, deviceId, isRecording, markerSize);
 
                 // console.log("Processed buffer in main thread:", processedBuffer);
-
-                let startTime = performance.now();
-                // 将数据从 SharedArrayBuffer 复制到普通的 ArrayBuffer
-                const processedData = new Uint8ClampedArray(processedBuffer.byteLength);
-                processedData.set(new Uint8ClampedArray(processedBuffer));
-
+                
                
 
-                const canvas = document.createElement("canvas");
+                // 使用 createImageBitmap渲染性能更好
+                
+                const processedData = new Uint8ClampedArray(processedBuffer.byteLength);
+                    processedData.set(new Uint8ClampedArray(processedBuffer));
+                const canvas = document.createElement('canvas');
                 canvas.width = width;
                 canvas.height = height;
-                const ctx = canvas.getContext("2d");
+                const ctx = canvas.getContext('2d');
                 if (!ctx) {
-                    throw new Error("Failed to get canvas context");
+                    throw new Error('Failed to get canvas context');
                 }
 
-                const imageData = new ImageData(processedData, width, height);
-                ctx.putImageData(imageData, 0, 0);
+                const imageBitmap = await createImageBitmap(new ImageData(new Uint8ClampedArray(processedData), width, height));
+                ctx.drawImage(imageBitmap, 0, 0);
+                // let endTime = performance.now();
+                    // console.log(`Time with render: ${endTime - startTime} ms`);
 
-                const url = canvas.toDataURL("image/jpeg", 0.1);
-                let endTime = performance.now();
-                console.log(`Time with render: ${endTime - startTime} ms`);
-                // console.log(`Processed Image URL for device ${deviceId}:`, url);
-
+                const url = canvas.toDataURL('image/jpeg', 0.1);
                 setProcessedImages((prevImages) => ({
                     ...prevImages,
                     [deviceId]: url,
                 }));
 
-                // 帧计数
-                //   let frameCounter = frameCounters[deviceId] || 0;
-                //   frameCounter++;
-                //   if (frameCounter % 10 === 0) {
-                //     // 每10帧更新一次图像
-                //     const canvas = document.createElement('canvas');
-                //     canvas.width = width;
-                //     canvas.height = height;
-                //     const ctx = canvas.getContext('2d');
-                //     if (!ctx) {
-                //       throw new Error("Failed to get canvas context");
-                //     }
 
-                //     const imageData = new ImageData(processedData, width, height);
-                //     ctx.putImageData(imageData, 0, 0);
 
-                //     const url = canvas.toDataURL('image/jpeg', 0.8);
-                //     console.log(`Processed Image URL for device ${deviceId}:`, url);
+                frameCount++; 
+                if (frameCount % frameRateCalculationInterval === 0) {
+                    let endTime = performance.now(); // 记录当前时间
+                    let elapsedTime = (endTime - startTime) / 1000; 
+                    let fps = frameRateCalculationInterval / elapsedTime; // 计算帧率
+                    console.log(`Average FPS: ${fps.toFixed(2)}`); 
 
-                //     setProcessedImages((prevImages) => ({
-                //       ...prevImages,
-                //       [deviceId]: url,
-                //     }));
-                //   }
-                // // 更新帧计数
-                //   setFrameCounters((prevCounters) => ({
-                //     ...prevCounters,
-                //     [deviceId]: frameCounter,
-                //   }));
+                    startTime = performance.now();
+                }
+
+                //
 
 
             } catch (error) {
@@ -231,61 +249,113 @@ const OpenCVPage = () => {
         [runJS, processedBuffers, isRecording, markerSize]
     );
 
+
+    // // 旧版本固定间隔获取图像
+    // const captureFrame = useCallback(
+    //     (deviceId: string) => {
+    //         const videoElement = videoRefs.current[deviceId];
+    //         // console.log("Video size: ", videoElement?.videoWidth, videoElement?.videoHeight);
+    //         const canvas = canvasRefs.current[deviceId];
+    //         const context = canvas?.getContext("2d", { willReadFrequently: true });
+    //         if (videoElement && context) {
+    //             if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
+    //                 if (canvas !== null) {
+    //                     canvas.width = videoElement.videoWidth;
+    //                     canvas.height = videoElement.videoHeight;
+    //                     // console.log("Canvas size: ", canvas.width, canvas.height);
+    //                     context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+    //                     const image = context.getImageData(0, 0, canvas.width, canvas.height);
+    //                     const pixelData = image.data;
+
+    //                     let buffer: ArrayBuffer, view: Uint8ClampedArray;
+
+    //                     if (originalBuffers[deviceId]) {
+    //                         buffer = originalBuffers[deviceId].buffer;
+    //                         view = originalBuffers[deviceId].view;
+    //                     } else {
+    //                         buffer = new ArrayBuffer(pixelData.byteLength);
+    //                         view = new Uint8ClampedArray(buffer);
+    //                         setOriginalBuffers((prev) => ({
+    //                             ...prev,
+    //                             [deviceId]: { buffer, view },
+    //                         }));
+    //                     }
+    //                     view.set(pixelData);
+
+    //                     return { deviceId, buffer, width: canvas.width, height: canvas.height };
+    //                 }
+    //             }
+    //         }
+    //         return { deviceId, buffer: null, width: 0, height: 0 };
+    //     },
+    //     [originalBuffers]
+    // );
+
+    // 使用requestVideoFrameCallback
     const captureFrame = useCallback(
         (deviceId: string) => {
             const videoElement = videoRefs.current[deviceId];
-            // console.log("Video size: ", videoElement?.videoWidth, videoElement?.videoHeight);
             const canvas = canvasRefs.current[deviceId];
             const context = canvas?.getContext("2d", { willReadFrequently: true });
+    
             if (videoElement && context) {
                 if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
                     if (canvas !== null) {
                         canvas.width = videoElement.videoWidth;
                         canvas.height = videoElement.videoHeight;
-                        // console.log("Canvas size: ", canvas.width, canvas.height);
-                        context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-
-                        const image = context.getImageData(0, 0, canvas.width, canvas.height);
-                        const pixelData = image.data;
-
-                        let buffer: ArrayBuffer, view: Uint8ClampedArray;
-
-                        if (originalBuffers[deviceId]) {
-                            buffer = originalBuffers[deviceId].buffer;
-                            view = originalBuffers[deviceId].view;
-                        } else {
-                            buffer = new ArrayBuffer(pixelData.byteLength);
-                            view = new Uint8ClampedArray(buffer);
-                            setOriginalBuffers((prev) => ({
-                                ...prev,
-                                [deviceId]: { buffer, view },
-                            }));
-                        }
-                        view.set(pixelData);
-
-                        return { deviceId, buffer, width: canvas.width, height: canvas.height };
+    
+                        const handleVideoFrame = async () => {
+                            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+    
+                            const image = context.getImageData(0, 0, canvas.width, canvas.height);
+                            const pixelData = image.data;
+    
+                            let buffer: ArrayBuffer, view: Uint8ClampedArray;
+    
+                            if (originalBuffers[deviceId]) {
+                                buffer = originalBuffers[deviceId].buffer;
+                                view = originalBuffers[deviceId].view;
+                            } else {
+                                buffer = new ArrayBuffer(pixelData.byteLength);
+                                view = new Uint8ClampedArray(buffer);
+                                setOriginalBuffers((prev) => ({
+                                    ...prev,
+                                    [deviceId]: { buffer, view },
+                                }));
+                            }
+                            view.set(pixelData);
+    
+                            await processImageWithJS(buffer, canvas.width, canvas.height, deviceId);
+    
+                            // 调用下一帧
+                            videoElement.requestVideoFrameCallback(handleVideoFrame);
+                        };
+    
+                        videoElement.requestVideoFrameCallback(handleVideoFrame);
                     }
                 }
             }
-            return { deviceId, buffer: null, width: 0, height: 0 };
         },
-        [originalBuffers]
+        [originalBuffers, processImageWithJS]
     );
+    
 
-    useEffect(() => {
-        const interval = setInterval(async () => {
-            // console.log('set interval')
-            const imageSrcPromises = selectedCameras.map(async (deviceId) => {
-                const { deviceId: id, buffer, width, height } = captureFrame(deviceId);
-                if (buffer) {
-                    await processImageWithJS(buffer, width, height, id);
-                }
-            });
-            await Promise.all(imageSrcPromises);
-        }, 1000 / fps);
 
-        return () => clearInterval(interval);
-    }, [captureFrame, processImageWithJS, selectedCameras, fps]);
+    // useEffect(() => {
+    //     const interval = setInterval(async () => {
+    //         // console.log('set interval')
+    //         const imageSrcPromises = selectedCameras.map(async (deviceId) => {
+    //             const { deviceId: id, buffer, width, height } = captureFrame(deviceId);
+    //             if (buffer) {
+    //                 await processImageWithJS(buffer, width, height, id);
+    //             }
+    //         });
+    //         await Promise.all(imageSrcPromises);
+    //     }, 1000 / fps);
+
+    //     return () => clearInterval(interval);
+    // }, [captureFrame, processImageWithJS, selectedCameras, fps]);
 
     //   useEffect(() => {
     //     let isCancelled = false;
@@ -457,6 +527,9 @@ const OpenCVPage = () => {
                                 onChange={(e) => setFps(Number(e.target.value))}
                             />
                         </div>
+                        <button className="btn btn-primary">
+                            Initialize
+                        </button>
                     </div>
                 </div>
                 <div className="col-span-2">

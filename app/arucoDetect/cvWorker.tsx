@@ -108,5 +108,21 @@ export const useOpencv = () => {
         });
     };
 
+    const initialize = (worker: Worker, deviceId: string) => {
+        return new Promise<{pose: number[]}>((resolve, reject) => {
+            const handleMessage = (event: MessageEvent) => {
+                if (event.data.type === "INITIALIZED" && event.data.deviceId === deviceId) {
+                    resolve(event.data.pose);
+                } else if (event.data.type === "INIT_ERROR" && event.data.deviceId === deviceId) {
+                    reject(event.data.error);
+                }
+                worker.removeEventListener("message", handleMessage);
+            };
+
+            worker.addEventListener("message", handleMessage);
+            worker.postMessage({ type: "INITIALIZE", deviceId });
+        });
+    }
+
     return { loading, status, addStatus, createWorker, runJS, getPoseData };
 };
